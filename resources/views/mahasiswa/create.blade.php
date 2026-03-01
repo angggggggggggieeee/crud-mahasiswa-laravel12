@@ -13,7 +13,7 @@
 
             @if ($errors->any())
                 <div class="alert alert-danger">
-                    <ul>
+                    <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -25,22 +25,54 @@
                 @csrf
 
                 <div class="mb-3">
-                    <input class="form-control" name="nim" placeholder="NIM">
+                    <input 
+                        type="text"
+                        class="form-control" 
+                        name="nim" 
+                        placeholder="NIM"
+                        value="{{ old('nim') }}"
+                        required
+                    >
                 </div>
 
                 <div class="mb-3">
-                    <input class="form-control" name="nama" placeholder="Nama">
+                    <input 
+                        type="text"
+                        class="form-control" 
+                        name="nama" 
+                        placeholder="Nama"
+                        value="{{ old('nama') }}"
+                        required
+                    >
                 </div>
 
                 <div class="mb-3">
-                    <input class="form-control" name="kelas" placeholder="Kelas">
+                    <input 
+                        type="text"
+                        class="form-control" 
+                        name="kelas" 
+                        placeholder="Kelas"
+                        value="{{ old('kelas') }}"
+                        required
+                    >
                 </div>
 
                 <div class="mb-3">
-                    <input class="form-control" name="matakuliah" placeholder="Mata Kuliah">
+                    <label class="form-label">Pilih Mata Kuliah</label>
+                    <select name="matakuliah_id" class="form-control" required>
+                        <option value="">-- Pilih Mata Kuliah --</option>
+                        @foreach($matakuliahs as $mk)
+                            <option 
+                                value="{{ $mk->id }}"
+                                {{ old('matakuliah_id') == $mk->id ? 'selected' : '' }}
+                            >
+                                {{ $mk->nama_mk }} ({{ $mk->kode_mk }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <button class="btn btn-primary">Simpan</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
         </div>
     </div>

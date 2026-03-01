@@ -10,15 +10,19 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('mahasiswas', function (Blueprint $table) {
-        $table->string('nim')->primary();
-        $table->string('nama');
-        $table->string('kelas');
-        $table->string('matakuliah');
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('mahasiswas', function (Blueprint $table) {
+            $table->id();
+            $table->string('nim')->unique();
+            $table->string('nama');
+            $table->string('kelas');
+
+            // Hanya kolom biasa, tanpa foreign key
+            $table->unsignedBigInteger('matakuliah_id')->nullable();
+
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -4,75 +4,97 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Mahasiswa;
+use App\Models\Matakuliah;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MahasiswaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
-{
-    $mahasiswas = Mahasiswa::all();
-    return view('mahasiswa.index', compact('mahasiswas'));
-}
+    {
+        $mahasiswas = Mahasiswa::with(['matakuliah', 'user'])->get();
+        return view('mahasiswa.index', compact('mahasiswas'));
+    }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
-{
-    return view('mahasiswa.create');
-}
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-  public function store(Request $request)
-{
-    $request->validate([
-        'nim' => 'required|unique:mahasiswas,nim',
-        'nama' => 'required',
-        'kelas' => 'required',
-        'matakuliah' => 'required',
-    ]);
-
-    Mahasiswa::create($request->all());
-    return redirect()->route('mahasiswa.index');
-}
-
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
     {
-        //
+        $matakuliahs = Matakuliah::all();
+        return view('mahasiswa.create', compact('matakuliahs'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nim'           => 'required|unique:mahasiswas,nim',
+            'nama'          => 'required',
+            'kelas'         => 'required',
+            'matakuliah_id' => 'required|exists:matakuliahs,id'
+        ]);
+
+        Mahasiswa::create([
+            'nim'           => $request->nim,
+            'nama'          => $request->nama,
+            'kelas'         => $request->kelas,
+            'matakuliah_id' => $request->matakuliah_id,
+            'user_id'       => auth()->id()
+        ]);
+
+        return redirect()->route('mahasiswa.index')
+            ->with('success', 'Data mahasiswa berhasil disimpan');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function edit($id)
     {
-        //
+        $mahasiswa   = Mahasiswa::findOrFail($id);
+        $matakuliahs = Matakuliah::all();
+
+        return view('mahasiswa.edit', compact('mahasiswa', 'matakuliahs'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $mahasiswa = Mahasiswa::findOrFail($id);
+
+        $request->validate([
+            'nim'           => 'required|unique:mahasiswas,nim,' . $id,
+            'nama'          => 'required',
+            'kelas'         => 'required',
+            'matakuliah_id' => 'required|exists:matakuliahs,id'
+        ]);
+
+        $mahasiswa->update([
+            'nim'           => $request->nim,
+            'nama'          => $request->nama,
+            'kelas'         => $request->kelas,
+            'matakuliah_id' => $request->matakuliah_id
+        ]);
+
+        return redirect()->route('mahasiswa.index')
+            ->with('success', 'Data mahasiswa berhasil diperbarui');
+    }
+
+    public function destroy($id)
+    {
+        if (!str_ends_with(auth()->user()->email, '@ikmi.ac.id')) {
+            return redirect()->route('mahasiswa.index')
+                ->with('error', 'Hanya user dengan email @ikmi.ac.id yang bisa menghapus data.');
+        }
+
+        $mahasiswa = Mahasiswa::findOrFail($id);
+        $mahasiswa->delete();
+
+        return redirect()->route('mahasiswa.index')
+            ->with('success', 'Data mahasiswa berhasil dihapus');
+    }
+
+    // ===================================
+    // ✅ CETAK PDF (SUDAH DIPERBAIKI)
+    // ===================================
+    public function cetakPdf()
+    {
+        $mahasiswas = Mahasiswa::with('matakuliah')->get();
+
+        $pdf = Pdf::loadView('mahasiswa.laporan_pdf', compact('mahasiswas'));
+
+        return $pdf->download('laporan-mahasiswa.pdf');
     }
 }
